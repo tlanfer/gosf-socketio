@@ -1,4 +1,4 @@
-module gosf
+module gosf-socketio
 
 go 1.16
 

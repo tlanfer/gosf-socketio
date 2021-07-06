@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ambelovsky/gosf-socketio/protocol"
-	"github.com/ambelovsky/gosf-socketio/transport"
+	"gosf/protocol"
+	"gosf/transport"
 )
 
 const (

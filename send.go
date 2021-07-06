@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/ambelovsky/gosf-socketio/protocol"
+	"gosf/protocol"
 )
 
 var (

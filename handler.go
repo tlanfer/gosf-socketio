@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"sync"
 
-	"gosf-socketio/protocol"
+	"github.com/joaopandolfi/gosf-socketio/protocol"
 )
 
 const (

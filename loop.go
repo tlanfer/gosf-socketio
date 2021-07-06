@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"gosf-socketio/protocol"
-	"gosf-socketio/transport"
+	"github.com/joaopandolfi/gosf-socketio/protocol"
+	"github.com/joaopandolfi/gosf-socketio/transport"
 )
 
 const (

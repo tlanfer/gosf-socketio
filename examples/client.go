@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"time"
 
-	gosocketio "gosf-socketio"
-	"gosf-socketio/transport"
+	gosocketio "github.com/joaopandolfi/gosf-socketio"
+	"github.com/joaopandolfi/gosf-socketio/transport"
 )
 
 type Channel struct {

@@ -137,7 +137,6 @@ func inLoop(c *Channel, m *methods) error {
 			go m.processIncomingMessage(c, msg)
 		}
 	}
-	return nil
 }
 
 var overflooded map[*Channel]struct{} = make(map[*Channel]struct{})
@@ -178,7 +177,6 @@ func outLoop(c *Channel, m *methods) error {
 			return closeChannel(c, m, err)
 		}
 	}
-	return nil
 }
 
 /**

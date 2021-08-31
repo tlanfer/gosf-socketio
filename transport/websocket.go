@@ -3,6 +3,7 @@ package transport
 import (
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -60,7 +61,12 @@ func (wsc *WebsocketConnection) GetMessage() (message string, err error) {
 }
 
 func (wsc *WebsocketConnection) WriteMessage(message string) error {
-	wsc.socket.SetWriteDeadline(time.Now().Add(wsc.transport.SendTimeout))
+	fmt.Println("send timeout ", wsc.transport.SendTimeout, message)
+	err := wsc.socket.SetWriteDeadline(time.Now().Add(wsc.transport.SendTimeout))
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
 	writer, err := wsc.socket.NextWriter(websocket.TextMessage)
 	if err != nil {
 		return err

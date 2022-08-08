@@ -60,7 +60,7 @@ create channel, map, and set active
 func (c *Channel) initChannel() {
 	//TODO: queueBufferSize from constant to server or client variable
 	c.out = make(chan string, queueBufferSize)
-	c.ack.resultWaiters = make(map[int](chan string))
+	//c.ack.resultWaiters = make(map[int](chan string))
 	c.alive = true
 }
 
@@ -183,13 +183,15 @@ func outLoop(c *Channel, m *methods) error {
 Pinger sends ping messages for keeping connection alive
 */
 func pinger(c *Channel) {
+	interval, _ := c.conn.PingParams()
+	ticker := time.NewTicker(interval)
 	for {
-		interval, _ := c.conn.PingParams()
-		time.Sleep(interval)
-		if !c.IsAlive() {
-			return
+		select {
+		case <-ticker.C:
+			if !c.IsAlive() {
+				return
+			}
+			c.out <- protocol.PingMessage
 		}
-
-		c.out <- protocol.PingMessage
 	}
 }

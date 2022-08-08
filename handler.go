@@ -23,7 +23,7 @@ type systemHandler func(c *Channel)
 Contains maps of message processing functions
 */
 type methods struct {
-	messageHandlers     map[string]*caller
+	messageHandlers     sync.Map
 	messageHandlersLock sync.RWMutex
 
 	onConnection    systemHandler
@@ -34,7 +34,7 @@ type methods struct {
 create messageHandlers map
 */
 func (m *methods) initMethods() {
-	m.messageHandlers = make(map[string]*caller)
+	//m.messageHandlers = make(sync.Map)
 }
 
 /**
@@ -46,10 +46,7 @@ func (m *methods) On(method string, f interface{}) error {
 		return err
 	}
 
-	m.messageHandlersLock.Lock()
-	defer m.messageHandlersLock.Unlock()
-	m.messageHandlers[method] = c
-
+	m.messageHandlers.Store(method, c)
 	return nil
 }
 
@@ -57,11 +54,11 @@ func (m *methods) On(method string, f interface{}) error {
 Find message processing function associated with given method
 */
 func (m *methods) findMethod(method string) (*caller, bool) {
-	m.messageHandlersLock.RLock()
-	defer m.messageHandlersLock.RUnlock()
+	if f, ok := m.messageHandlers.Load(method); ok {
+		return f.(*caller), true
+	}
 
-	f, ok := m.messageHandlers[method]
-	return f, ok
+	return nil, false
 }
 
 func (m *methods) callLoopEvent(c *Channel, event string) {

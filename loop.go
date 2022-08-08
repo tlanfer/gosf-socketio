@@ -104,9 +104,7 @@ func closeChannel(c *Channel, m *methods, args ...interface{}) error {
 	c.out <- protocol.CloseMessage
 	m.callLoopEvent(c, OnDisconnection)
 
-	overfloodedLock.Lock()
-	delete(overflooded, c)
-	overfloodedLock.Unlock()
+	deleteOverflooded(c)
 
 	return nil
 }
@@ -139,14 +137,14 @@ func inLoop(c *Channel, m *methods) error {
 	}
 }
 
-var overflooded map[*Channel]struct{} = make(map[*Channel]struct{})
-var overfloodedLock sync.Mutex
+var overflooded sync.Map
 
-func AmountOfOverflooded() int64 {
-	overfloodedLock.Lock()
-	defer overfloodedLock.Unlock()
+func deleteOverflooded(c *Channel) {
+	overflooded.Delete(c)
+}
 
-	return int64(len(overflooded))
+func storeOverflow(c *Channel) {
+	overflooded.Store(c, struct{}{})
 }
 
 /**
@@ -158,13 +156,9 @@ func outLoop(c *Channel, m *methods) error {
 		if outBufferLen >= queueBufferSize-1 {
 			return closeChannel(c, m, ErrorSocketOverflood)
 		} else if outBufferLen > int(queueBufferSize/2) {
-			overfloodedLock.Lock()
-			overflooded[c] = struct{}{}
-			overfloodedLock.Unlock()
+			storeOverflow(c)
 		} else {
-			overfloodedLock.Lock()
-			delete(overflooded, c)
-			overfloodedLock.Unlock()
+			deleteOverflooded(c)
 		}
 
 		msg := <-c.out
@@ -186,12 +180,10 @@ func pinger(c *Channel) {
 	interval, _ := c.conn.PingParams()
 	ticker := time.NewTicker(interval)
 	for {
-		select {
-		case <-ticker.C:
-			if !c.IsAlive() {
-				return
-			}
-			c.out <- protocol.PingMessage
+		<-ticker.C
+		if !c.IsAlive() {
+			return
 		}
+		c.out <- protocol.PingMessage
 	}
 }

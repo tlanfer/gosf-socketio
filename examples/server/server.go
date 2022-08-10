@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	gosocketio "github.com/joaopandolfi/gosf-socketio"
-	"github.com/joaopandolfi/gosf-socketio/transport"
+	gosocketio "github.com/ambelovsky/gosf-socketio"
+	"github.com/ambelovsky/gosf-socketio/transport"
 )
 
 type Channel struct {

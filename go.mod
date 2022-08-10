@@ -1,4 +1,4 @@
-module github.com/joaopandolfi/gosf-socketio
+module github.com/ambelovsky/gosf-socketio
 
 go 1.18
 

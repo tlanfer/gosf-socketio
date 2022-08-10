@@ -1,18 +1,20 @@
-### CLONE OF ORIGINAL REPO (just for safety)
-
 golang socket.io
 ================
 
 GoLang implementation of [socket.io](http://socket.io) library, client and server.
 
-This library is maintained for [github.com/joaopandolfi/gosf-socketio](https://github.com/joaopandolfi/gosf-socketio), the GoLang SocketIO Framework.
+This library is maintained for [GOSF](https://github.com/ambelovsky/gosf-socketio), the GoLang SocketIO Framework.
+
+This library was built with contributions by:
+- [ambelovsky](https://github.com/ambelovsky)
+- [joaopandolfi](https://github.com/joaopandolfi)
 
 Examples directory contains simple client and server.
 
 ### Get It
 
 ```sh
-go get -u github.com/joaopandolfi/gosf-socketio-socketio
+go get -u github.com/ambelovsky/gosf-socketio
 ```
 
 ### Simple server usage

@@ -76,9 +76,10 @@ Checks that Channel is still alive
 */
 func (c *Channel) IsAlive() bool {
 	c.aliveLock.Lock()
-	defer c.aliveLock.Unlock()
+	isAlive := c.alive
+	c.aliveLock.Unlock()
 
-	return c.alive
+	return isAlive
 }
 
 func (c *Channel) setAliveValue(value bool) {

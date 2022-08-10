@@ -61,7 +61,7 @@ func (c *Channel) initChannel() {
 	//TODO: queueBufferSize from constant to server or client variable
 	c.out = make(chan string, queueBufferSize)
 	//c.ack.resultWaiters = make(map[int](chan string))
-	c.alive = true
+	c.setAliveValue(true)
 }
 
 /**
@@ -76,25 +76,30 @@ Checks that Channel is still alive
 */
 func (c *Channel) IsAlive() bool {
 	c.aliveLock.Lock()
-	defer c.aliveLock.Unlock()
+	isAlive := c.alive
+	c.aliveLock.Unlock()
 
-	return c.alive
+	return isAlive
+}
+
+func (c *Channel) setAliveValue(value bool) {
+	c.aliveLock.Lock()
+	c.alive = value
+	c.aliveLock.Unlock()
 }
 
 /**
 Close channel
 */
 func closeChannel(c *Channel, m *methods, args ...interface{}) error {
-	c.aliveLock.Lock()
-	defer c.aliveLock.Unlock()
-
-	if !c.alive {
+	if !c.IsAlive() {
 		//already closed
 		return nil
 	}
 
 	c.conn.Close()
-	c.alive = false
+
+	c.setAliveValue(false)
 
 	//clean outloop
 	for len(c.out) > 0 {

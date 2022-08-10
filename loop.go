@@ -60,8 +60,8 @@ create channel, map, and set active
 func (c *Channel) initChannel() {
 	//TODO: queueBufferSize from constant to server or client variable
 	c.out = make(chan string, queueBufferSize)
-	c.ack.resultWaiters = make(map[int](chan string))
-	c.alive = true
+	//c.ack.resultWaiters = make(map[int](chan string))
+	c.setAliveValue(true)
 }
 
 /**
@@ -76,37 +76,40 @@ Checks that Channel is still alive
 */
 func (c *Channel) IsAlive() bool {
 	c.aliveLock.Lock()
-	defer c.aliveLock.Unlock()
+	isAlive := c.alive
+	c.aliveLock.Unlock()
 
-	return c.alive
+	return isAlive
+}
+
+func (c *Channel) setAliveValue(value bool) {
+	c.aliveLock.Lock()
+	c.alive = value
+	c.aliveLock.Unlock()
 }
 
 /**
 Close channel
 */
 func closeChannel(c *Channel, m *methods, args ...interface{}) error {
-	c.aliveLock.Lock()
-	defer c.aliveLock.Unlock()
-
-	if !c.alive {
+	if !c.IsAlive() {
 		//already closed
 		return nil
 	}
 
 	c.conn.Close()
-	c.alive = false
+
+	c.setAliveValue(false)
 
 	//clean outloop
 	for len(c.out) > 0 {
 		<-c.out
 	}
-	c.out <- protocol.CloseMessage
 
+	c.out <- protocol.CloseMessage
 	m.callLoopEvent(c, OnDisconnection)
 
-	overfloodedLock.Lock()
-	delete(overflooded, c)
-	overfloodedLock.Unlock()
+	deleteOverflooded(c)
 
 	return nil
 }
@@ -137,17 +140,16 @@ func inLoop(c *Channel, m *methods) error {
 			go m.processIncomingMessage(c, msg)
 		}
 	}
-	return nil
 }
 
-var overflooded map[*Channel]struct{} = make(map[*Channel]struct{})
-var overfloodedLock sync.Mutex
+var overflooded sync.Map
 
-func AmountOfOverflooded() int64 {
-	overfloodedLock.Lock()
-	defer overfloodedLock.Unlock()
+func deleteOverflooded(c *Channel) {
+	overflooded.Delete(c)
+}
 
-	return int64(len(overflooded))
+func storeOverflow(c *Channel) {
+	overflooded.Store(c, struct{}{})
 }
 
 /**
@@ -159,13 +161,9 @@ func outLoop(c *Channel, m *methods) error {
 		if outBufferLen >= queueBufferSize-1 {
 			return closeChannel(c, m, ErrorSocketOverflood)
 		} else if outBufferLen > int(queueBufferSize/2) {
-			overfloodedLock.Lock()
-			overflooded[c] = struct{}{}
-			overfloodedLock.Unlock()
+			storeOverflow(c)
 		} else {
-			overfloodedLock.Lock()
-			delete(overflooded, c)
-			overfloodedLock.Unlock()
+			deleteOverflooded(c)
 		}
 
 		msg := <-c.out
@@ -178,20 +176,19 @@ func outLoop(c *Channel, m *methods) error {
 			return closeChannel(c, m, err)
 		}
 	}
-	return nil
 }
 
 /**
 Pinger sends ping messages for keeping connection alive
 */
 func pinger(c *Channel) {
+	interval, _ := c.conn.PingParams()
+	ticker := time.NewTicker(interval)
 	for {
-		interval, _ := c.conn.PingParams()
-		time.Sleep(interval)
+		<-ticker.C
 		if !c.IsAlive() {
 			return
 		}
-
 		c.out <- protocol.PingMessage
 	}
 }

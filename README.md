@@ -3,7 +3,7 @@ golang socket.io
 
 GoLang implementation of [socket.io](http://socket.io) library, client and server.
 
-This library is maintained for [GOSF](https://github.com/ambelovsky/gosf-socketio), the GoLang SocketIO Framework.
+This library is maintained for [GOSF](https://github.com/ambelovsky/gosf), the GoLang SocketIO Framework.
 
 This library was built with contributions by:
 - [ambelovsky](https://github.com/ambelovsky)

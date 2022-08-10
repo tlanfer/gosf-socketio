@@ -92,9 +92,7 @@ func (c *Channel) setAliveValue(value bool) {
 Close channel
 */
 func closeChannel(c *Channel, m *methods, args ...interface{}) error {
-	isAlive := c.IsAlive()
-
-	if !isAlive {
+	if !c.IsAlive() {
 		//already closed
 		return nil
 	}
@@ -188,8 +186,7 @@ func pinger(c *Channel) {
 	ticker := time.NewTicker(interval)
 	for {
 		<-ticker.C
-		isAlive := c.IsAlive()
-		if !isAlive {
+		if !c.IsAlive() {
 			return
 		}
 		c.out <- protocol.PingMessage

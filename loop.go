@@ -61,7 +61,7 @@ func (c *Channel) initChannel() {
 	//TODO: queueBufferSize from constant to server or client variable
 	c.out = make(chan string, queueBufferSize)
 	//c.ack.resultWaiters = make(map[int](chan string))
-	c.alive = true
+	c.setAliveValue(true)
 }
 
 /**
@@ -81,20 +81,26 @@ func (c *Channel) IsAlive() bool {
 	return c.alive
 }
 
+func (c *Channel) setAliveValue(value bool) {
+	c.aliveLock.Lock()
+	c.alive = value
+	c.aliveLock.Unlock()
+}
+
 /**
 Close channel
 */
 func closeChannel(c *Channel, m *methods, args ...interface{}) error {
-	c.aliveLock.Lock()
-	defer c.aliveLock.Unlock()
+	isAlive := c.IsAlive()
 
-	if !c.alive {
+	if !isAlive {
 		//already closed
 		return nil
 	}
 
 	c.conn.Close()
-	c.alive = false
+
+	c.setAliveValue(false)
 
 	//clean outloop
 	for len(c.out) > 0 {
@@ -181,7 +187,8 @@ func pinger(c *Channel) {
 	ticker := time.NewTicker(interval)
 	for {
 		<-ticker.C
-		if !c.IsAlive() {
+		isAlive := c.IsAlive()
+		if !isAlive {
 			return
 		}
 		c.out <- protocol.PingMessage
